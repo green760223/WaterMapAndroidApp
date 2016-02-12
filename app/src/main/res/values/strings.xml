@@ -1,0 +1,71 @@
+<resources>
+    <string name="app_name">My Drinking Water Map Test</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="location_permission_denied" />
+    <string name="permission_required_toast" />
+    <string name="permission_rationale_location" />
+    <string name="title_activity_main">MainActivity</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="search">搜尋水點</string>
+    <string name="add_water_point">新增水點</string>
+    <string name="hint_water_point_name">水點地標 (如:捷運大安站1號出口)</string>
+    <string name="hint_water_point_description">詳細位置 (如:進入右轉約10公尺)</string>
+    <string name="hint_water_point_opentime">例如:週一至週五8:00~17:00</string>
+    <string name="prompt_spinner">請選擇類型</string>
+
+    <string name="hello_world">HelloWorld</string>
+    <string name="drawer_open">DrawerOpen</string>
+    <string name="drawer_close">DrawerClose</string>
+    <string name="action_settings">Settings</string>
+
+    <string-array name="left_draw">
+        <item>會員登入</item>
+        <item>常見問題</item>
+        <item>關於我們</item>
+        <item>聯絡我們</item>
+        <item>通知中心</item>
+        <item>我的水點</item>
+    </string-array>
+
+    <string-array name="water_point_type">
+        <item>飲水機</item>
+        <item>直飲台</item>
+        <item>生飲台</item>
+        <item>加水站</item>
+        <item>山泉水</item>
+    </string-array>
+
+    <string-array name="begin_time">
+        <item>星期一</item>
+        <item>星期二</item>
+        <item>星期三</item>
+        <item>星期四</item>
+        <item>星期五</item>
+        <item>星期六</item>
+        <item>星期天</item>
+    </string-array>
+
+    <string-array name="end_time">
+        <item>星期一</item>
+        <item>星期二</item>
+        <item>星期三</item>
+        <item>星期四</item>
+        <item>星期五</item>
+        <item>星期六</item>
+        <item>星期天</item>
+    </string-array>
+
+    <string name="begin_opentime">開始時間</string>
+    <string name="end_opentime">結束時間</string>
+
+    <string name="title_activity_add_water_point">新增水點</string>
+    <string name="title_activity_test">TestActivity</string>
+
+    <string name="create_water_point">送出資料</string>
+
+    <string name="test">測試</string>
+
+</resources>

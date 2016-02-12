@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/navigation_item_1"
+            android:checked="true"
+            android:icon="@drawable/infomation"
+            android:title="Navigation Items 1"/>
+        <item
+            android:id="@+id/navigation_item_2"
+            android:icon="@drawable/my_water_point"
+            android:title="Navigation Items 2"/>
+        <item
+            android:id="@+id/navigation_item_3"
+            android:icon="@drawable/login"
+            android:title="Navigation Items 3"/>
+        <item
+            android:id="@+id/navigation_item_4"
+            android:icon="@drawable/questions"
+            android:title="Navigation Items 4"/>
+        <item
+            android:id="@+id/navigation_item_5"
+            android:icon="@drawable/about_us"
+            android:title="Navigation Items 5"/>
+        <item
+            android:id="@+id/navigation_item_6"
+            android:icon="@drawable/contact_us"
+            android:title="Navigation Items 6"/>
+    </group>
+</menu>

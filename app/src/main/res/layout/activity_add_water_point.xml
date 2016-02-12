@@ -1,0 +1,463 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context="com.example.lawrencechuang.mydrinkingwatermaptest.AddWaterPointActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_below="@+id/view"
+        android:id="@+id/relativeLayout"
+        android:orientation="vertical">
+
+        <!--<TextView-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:textAppearance="?android:attr/textAppearanceMedium"-->
+            <!--android:text="水點名稱"-->
+            <!--android:layout_alignParentLeft="true"-->
+            <!--android:layout_alignParentRight="true"-->
+            <!--android:layout_marginTop="16dp"-->
+            <!--android:layout_marginLeft="16dp"-->
+            <!--android:id="@+id/water_point_name"-->
+            <!--android:layout_alignParentTop="true"-->
+            <!--android:layout_alignParentStart="true"-->
+            <!--android:textColor="#000000" />-->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/linearLayout"
+            android:layout_marginTop="4dp"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+        <!--android:layout_below="@+id/water_point_name"-->
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:id="@+id/ed_water_point_name"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="2dp"
+                android:hint="@string/hint_water_point_name"
+                android:textColorHint="#95A1AA"
+                android:textColor="#000000"
+                android:selectAllOnFocus="true"
+                android:textSize="8pt"
+                android:layout_weight="0" />
+
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:id="@+id/ed_water_point_description"
+                android:layout_weight="0"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="2dp"
+                android:hint="@string/hint_water_point_description"
+                android:textColorHint="#95A1AA"
+                android:textColor="#000000"
+                android:selectAllOnFocus="true"
+                android:textSize="8pt"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="水溫"
+                android:textSize="6pt"
+                android:id="@+id/water_temperature"
+                android:layout_gravity="left"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="16dp"
+                android:textColor="#000000"/>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginLeft="14dp"
+                android:layout_marginRight="14dp"
+                android:layout_marginTop="4dp"
+                android:background="#000000" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/layout_temp"
+                android:layout_marginLeft="14dp"
+                android:layout_marginRight="14dp"
+                android:layout_marginTop="2dp">
+
+                <CheckBox
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/hot_water"
+                    android:text="熱水"
+                    android:layout_marginTop="6dp"
+                    android:layout_weight="1" />
+
+                <CheckBox
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/warm_water"
+                    android:text="溫水"
+                    android:layout_marginTop="6dp"
+                    android:layout_weight="1" />
+
+                <CheckBox
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/cold_water"
+                    android:text="冷水"
+                    android:layout_marginTop="6dp"
+                    android:layout_weight="1" />
+
+                <CheckBox
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/ice_water"
+                    android:text="冰水"
+                    android:layout_marginTop="6dp"
+                    android:layout_weight="1" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/linearLayout2"
+                android:layout_marginTop="4dp"
+                android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="飲水機類型"
+                android:textSize="6pt"
+                android:id="@+id/water_type"
+                android:layout_gravity="left"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="16dp"
+                android:textColor="#000000"/>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginLeft="14dp"
+                android:layout_marginRight="14dp"
+                android:layout_marginTop="4dp"
+                android:background="#000000" />
+
+                <Spinner
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/spinner_water_point_type"
+                    android:spinnerMode="dialog"
+                    android:entries="@array/water_point_type"
+                    android:prompt="@string/prompt_spinner"
+                    />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/layout_opentime"
+                android:orientation="vertical"
+                android:layout_marginTop="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="開放時間"
+                    android:textSize="6pt"
+                    android:id="@+id/water_opentime"
+                    android:layout_gravity="left"
+                    android:layout_marginLeft="10dp"
+                    android:textColor="#000000"/>
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginLeft="14dp"
+                    android:layout_marginRight="14dp"
+                    android:layout_marginTop="4dp"
+                    android:background="#000000" />
+
+                <CheckBox
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginTop="6dp"
+                    android:id="@+id/all_day"
+                    android:text="全天開放"
+                    />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:layout_marginLeft="14dp"
+                    android:layout_marginRight="14dp"
+                    android:layout_marginTop="4dp"
+                    android:background="#000000" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="從"
+                    android:textSize="5.5pt"
+                    android:layout_gravity="left"
+                    android:layout_marginLeft="14dp"
+                    android:layout_marginTop="14dp"
+                    android:textColor="#95A1AA"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Spinner
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/water_begintime"
+                    android:layout_marginLeft="14dp"
+                    android:spinnerMode="dialog"
+                    android:entries="@array/begin_time"
+                    android:prompt="@string/begin_opentime"
+                    android:layout_weight="0.5">
+                </Spinner>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/water_start"
+                    android:layout_weight="0.6"
+                    android:text="@string/begin_opentime"
+                    android:layout_marginRight="14dp"
+                    style="@android:style/Widget.DeviceDefault.Light.Spinner">
+                </TextView>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="至"
+                    android:textSize="5.5pt"
+                    android:layout_gravity="left"
+                    android:layout_marginLeft="14dp"
+                    android:layout_marginTop="6dp"
+                    android:textColor="#95A1AA"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Spinner
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/water_endtime"
+                    android:spinnerMode="dialog"
+                    android:entries="@array/end_time"
+                    android:prompt="@string/end_opentime"
+                    android:layout_marginLeft="14dp"
+                    android:layout_weight="0.5">
+                </Spinner>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/water_close"
+                    android:layout_weight="0.6"
+                    android:text="@string/end_opentime"
+                    android:layout_marginRight="14dp"
+                    style="@android:style/Widget.DeviceDefault.Light.Spinner">
+                </TextView>
+
+            </LinearLayout>
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/add_water_point"
+                android:text="@string/create_water_point"
+                android:layout_marginTop="24dp"
+                android:layout_gravity="bottom|center_horizontal"
+                android:onClick="addWaterPointInfo"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/test"
+                android:text="@string/test"
+                />
+
+
+
+        </LinearLayout>
+
+
+        <!--<TextView-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:textAppearance="?android:attr/textAppearanceMedium"-->
+            <!--android:text="水溫"-->
+            <!--android:id="@+id/water_temperature"-->
+            <!--android:layout_below="@+id/linearLayout"-->
+            <!--android:textColor="#000000"/>-->
+
+
+
+        <!--<LinearLayout-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_below="@+id/water_temperature"-->
+            <!--android:layout_marginLeft="14dp"-->
+            <!--android:layout_marginRight="14dp"-->
+            <!--android:layout_marginTop="4dp"-->
+            <!--android:id="@+id/linearLayout2">-->
+
+            <!--<CheckBox-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:text="熱水"-->
+                <!--android:textSize="12dp"-->
+                <!--android:textColor="#000000"-->
+                <!--android:id="@+id/hot_water"-->
+                <!--android:layout_weight="1"-->
+                <!--android:checked="false"/>-->
+
+            <!--<CheckBox-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:text="溫水"-->
+                <!--android:textSize="12dp"-->
+                <!--android:textColor="#000000"-->
+                <!--android:id="@+id/warm_water"-->
+                <!--android:layout_weight="1"-->
+                <!--android:checked="false"/>-->
+
+            <!--<CheckBox-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:text="冷水"-->
+                <!--android:textSize="12dp"-->
+                <!--android:id="@+id/cold_water"-->
+                <!--android:textColor="#000000"-->
+                <!--android:layout_weight="1"-->
+                <!--android:checked="false"/>-->
+
+            <!--<CheckBox-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:text="冰水"-->
+                <!--android:textSize="12dp"-->
+                <!--android:textColor="#000000"-->
+                <!--android:id="@+id/ice_water"-->
+                <!--android:layout_weight="1"-->
+                <!--android:checked="false"/>-->
+
+        <!--</LinearLayout>-->
+
+        <!--<TextView-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:textAppearance="?android:attr/textAppearanceMedium"-->
+            <!--android:text="水點描述"-->
+            <!--android:id="@+id/water_point_description"-->
+            <!--android:layout_below="@+id/linearLayout2"-->
+            <!--android:layout_alignStart="@+id/water_temperature"-->
+            <!--android:layout_marginTop="8dp"-->
+            <!--android:textColor="#000000" />-->
+
+        <!--<LinearLayout-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="60dp"-->
+            <!--android:layout_below="@+id/water_point_description"-->
+            <!--android:id="@+id/linearLayout3">-->
+
+            <!--<EditText-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:id="@+id/ed_water_point_description"-->
+                <!--android:layout_weight="1"-->
+                <!--android:layout_marginLeft="14dp"-->
+                <!--android:layout_marginRight="14dp"-->
+                <!--android:layout_marginTop="2dp"-->
+                <!--android:hint="@string/hint_water_point_description"-->
+                <!--android:textColorHint="#95A1AA"-->
+                <!--android:textColor="#000000"-->
+                <!--android:selectAllOnFocus="true"-->
+                <!--android:textSize="10pt"/>-->
+        <!--</LinearLayout>-->
+
+
+
+        <!--<LinearLayout-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content">-->
+
+            <!--<TextView-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:layout_marginLeft="16dp"-->
+                <!--android:textAppearance="?android:attr/textAppearanceMedium"-->
+                <!--android:text="飲水機類型"-->
+                <!--android:id="@+id/water_point_type"-->
+                <!--android:textColor="#000000"-->
+                <!--android:prompt = "@string/prompt_spinner"/>-->
+
+            <!--<Spinner-->
+                <!--android:layout_width="100dp"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:id="@+id/spinner_water_point_type"-->
+                <!--android:spinnerMode="dialog"-->
+                <!--android:entries="@array/water_point_type"-->
+                <!--android:text="[請選擇類型：]" />-->
+
+
+        <!--</LinearLayout>-->
+
+        <!--<Button-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:text="送出資料"-->
+            <!--android:id="@+id/btn_addWaterPoint"-->
+            <!--android:layout_marginBottom="25dp"-->
+            <!--android:layout_alignParentBottom="true"-->
+            <!--android:layout_centerHorizontal="true" />-->
+
+    </LinearLayout>
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay"
+        android:id="@+id/view">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:popupTheme="@style/AppTheme.PopupOverlay" />
+    </android.support.design.widget.AppBarLayout>
+
+
+</RelativeLayout>
