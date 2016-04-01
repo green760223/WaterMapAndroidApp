@@ -61,6 +61,7 @@ public class MapsActivity extends AppCompatActivity implements
         GoogleMap.OnMyLocationButtonClickListener,
         ActivityCompat.OnRequestPermissionsResultCallback,
         LocationListener, GoogleMap.OnCameraChangeListener {
+    
 
     /**
      * Request code for location permission request.
