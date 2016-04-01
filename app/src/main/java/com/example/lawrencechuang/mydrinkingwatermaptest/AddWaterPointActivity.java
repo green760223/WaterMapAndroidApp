@@ -180,6 +180,8 @@ public class AddWaterPointActivity extends AppCompatActivity
 
 
 
+
+
     public String showLocationInfo(Location location)
     {
         StringBuffer sb = new StringBuffer("");

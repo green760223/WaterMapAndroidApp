@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/MyDrinkingWaterMapTest.iml" filepath="$PROJECT_DIR$/MyDrinkingWaterMapTest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/WaterMapAndroidApp.iml" filepath="$PROJECT_DIR$/WaterMapAndroidApp.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
