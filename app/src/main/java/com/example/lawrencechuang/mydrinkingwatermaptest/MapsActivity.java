@@ -40,6 +40,8 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.maps.android.clustering.ClusterItem;
+import com.google.maps.android.clustering.ClusterManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -61,7 +63,7 @@ public class MapsActivity extends AppCompatActivity implements
         GoogleMap.OnMyLocationButtonClickListener,
         ActivityCompat.OnRequestPermissionsResultCallback,
         LocationListener, GoogleMap.OnCameraChangeListener {
-    
+
 
     /**
      * Request code for location permission request.
@@ -100,6 +102,8 @@ public class MapsActivity extends AppCompatActivity implements
     private Double lastLng;
     private Float lastZoom;
     private Cursor lastPoint;
+    private ClusterManager<ClusterMarker> myItemClusterManager;
+    private List<ClusterMarker> clusterMarkerItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -124,6 +128,7 @@ public class MapsActivity extends AppCompatActivity implements
         /*檢查是否具有建立資料表*/
 //        Boolean isTable = isTableExist();
 //        Log.d("=boolean=", isTable + "");
+
 
 
         //建立toolbar
@@ -191,6 +196,7 @@ public class MapsActivity extends AppCompatActivity implements
         String s = "http://drinkingwatermap-watermap.rhcloud.com/WaterMap/api/v1/waterPoints/getAllBasicWaterPoints";
         new getAllWaterPoint().execute(s);
 
+
     }
 
 
@@ -209,6 +215,7 @@ public class MapsActivity extends AppCompatActivity implements
         isNetworkEnable = mlocationMgr.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
         Log.d("=xisGpsEnablex=", isGpsEnable + "");
         Log.d("=xisNetWorkEnablex=", isNetworkEnable + "");
+
 
         /**
          * gps and network同時關閉
@@ -332,14 +339,13 @@ public class MapsActivity extends AppCompatActivity implements
     }
 
 
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.d("=destroy=", "destroy" + "/" + posResult);
+        Log.d("=destroy=", "position before destroy: " + posResult);
         insertPosition(posResult);
         helper.close();
-        Log.d("=DB=", "CLOSE");
+        Log.d("=DB=", "Database is close");
     }
 
 
@@ -371,7 +377,14 @@ public class MapsActivity extends AppCompatActivity implements
     public void onMapReady(GoogleMap googleMap) {
 
         mMap = googleMap;
-        mMap.setOnCameraChangeListener(this);
+
+        myItemClusterManager = new ClusterManager<ClusterMarker>(this, mMap);
+
+        /*multiListener here*/
+        MultiListener multiListener = new MultiListener();
+        multiListener.registerListener(myItemClusterManager);
+        multiListener.registerListener(this);
+        mMap.setOnCameraChangeListener(multiListener);
 
 
         //取消導航與切換到網路版google map
@@ -391,7 +404,7 @@ public class MapsActivity extends AppCompatActivity implements
         } else {
             /*move camera to Taipei 101.*/
             LatLng point = new LatLng(25.0334784, 121.5618758);
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(point, 15));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(point, 14));
         }
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -465,6 +478,27 @@ public class MapsActivity extends AppCompatActivity implements
                     Manifest.permission.ACCESS_FINE_LOCATION, true);
         } else if (mMap != null) {
             mMap.setMyLocationEnabled(true);
+        }
+    }
+
+
+    /**
+     * Create multiple setOnCameraChangeListener() method
+     */
+    public class MultiListener implements GoogleMap.OnCameraChangeListener {
+
+        private List<GoogleMap.OnCameraChangeListener> multiListener = new ArrayList<GoogleMap.OnCameraChangeListener>();
+
+        public void registerListener(GoogleMap.OnCameraChangeListener listener) {
+            multiListener.add(listener);
+        }
+
+        @Override
+        public void onCameraChange(CameraPosition cameraPosition) {
+            for (GoogleMap.OnCameraChangeListener ccl : multiListener) {
+                ccl.onCameraChange(cameraPosition);
+                Log.d("=multi=", ccl.toString());
+            }
         }
     }
 
@@ -642,6 +676,7 @@ public class MapsActivity extends AppCompatActivity implements
                 //解析從api傳回來的json字串
                 JSONArray results = new JSONArray(s);
                 List<Marker> markers = new ArrayList<Marker>();
+                clusterMarkerItem = new ArrayList<ClusterMarker>();
 
                 for (int i = 0; i < results.length(); i++) {
                     WaterPointsModel waterPointsModel = new WaterPointsModel();
@@ -659,22 +694,34 @@ public class MapsActivity extends AppCompatActivity implements
                     String name = waterPoint.getString("waterPointName");
                     String description = waterPoint.getString("description");
                     Log.d("WaterPoint:", name + "/" + lat + "/" + lng);
-                    Marker marker = mMap.addMarker(new MarkerOptions()
-                                    .title(name)
-                                    .position(new LatLng(lat, lng))
-                                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.waterdrop))
-                                    .snippet(description)
-                    );
-                    markers.add(marker);
-//                    Log.d("name:", waterPointsModel.getWaterPointName() + "");
+//                    Marker marker = mMap.addMarker(new MarkerOptions()
+//                                    .title(name)
+//                                    .position(new LatLng(lat, lng))
+//                                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.waterdrop))
+//                                    .snippet(description)
+//                    );
+//                    markers.add(marker);
+
+                    /**
+                     * test cluster here
+                     */
+                    clusterMarkerItem.add(new ClusterMarker(lat, lng));
+
+
                 }
 
                 Log.d("markers:", markers.size() + "");
+                Log.d("=clusterMarkerItem=", clusterMarkerItem.size() + "");
 
 
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+
+            myItemClusterManager.addItems(clusterMarkerItem);
+
+            /*在google map上強制一開始顯示clustering後座標結果*/
+            myItemClusterManager.cluster();
 
         }
     }
