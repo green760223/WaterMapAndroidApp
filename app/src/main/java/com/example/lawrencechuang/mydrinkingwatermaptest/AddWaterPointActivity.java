@@ -2,33 +2,26 @@ package com.example.lawrencechuang.mydrinkingwatermaptest;
 
 import android.Manifest;
 import android.app.AlertDialog;
-import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.os.Looper;
 import android.provider.Settings;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.android.volley.Request.Method;
@@ -36,16 +29,17 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.codetroopers.betterpickers.radialtimepicker.RadialTimePickerDialogFragment;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+import java.util.logging.Handler;
 
 
 public class AddWaterPointActivity extends AppCompatActivity
@@ -65,10 +59,13 @@ public class AddWaterPointActivity extends AppCompatActivity
     private double longitude;
     private double latitude;
     private TextView results;
+    private TextView results2;
     private String bestProvider;
     private Location location;
     private String coordinate;
-    private String coor;
+    private String coordinateNet;
+    private String coorGps;
+    private String coorNet;
     private EditText waterName;
     private EditText waterDescription;
     private CheckBox warmWater;
@@ -96,38 +93,41 @@ public class AddWaterPointActivity extends AppCompatActivity
     private String mWaterStartClock;
     private String mWaterCloseClock;
     private String mOpenTime;
+    private LocationManager locationManagerGps;
+    private boolean isRemove = false;
+    private CountDownTimer countDownTimer;
+    private boolean isGps;
+    private boolean isNetwork;
+    private boolean isSuccess;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
-        addWaterPointAPI = "http://drinkingwatermap-watermap.rhcloud.com/WaterMap/api/v1/waterPoints/addWaterPoint";
         super.onCreate(savedInstanceState);
+        addWaterPointAPI = "http://drinkingwatermap-watermap.rhcloud.com/WaterMap/api/v1/waterPoints/addWaterPoint";
         setContentView(R.layout.activity_add_water_point);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         toolbar.setTitle("新增水點");
         findViews();
 
-        results = (TextView) findViewById(R.id.test);
+        results = (TextView) findViewById(R.id.test1);
+        results2 = (TextView) findViewById(R.id.test2);
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-
-//        if(isGpsOpen())
-//        {
-//
-//        }
-//        else
-//        {
-//            openGps();
-//        }
+        isGps = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        isNetwork = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
         showStartTimePickerDialog();
         showCloseTimePickerDialog();
 
-        getProvider();
-
-
+//        Intent intent = new Intent();
+//        intent.putExtra("code", "here is AddWaterPointActivity.class!");
+//        setResult(RESULT_OK, intent);
+//        if(isSuccess) {
+//            setResultIntent();
+//        }
 
     }
 
@@ -142,7 +142,17 @@ public class AddWaterPointActivity extends AppCompatActivity
             bestProvider = locationManager.NETWORK_PROVIDER;
         }
 
-        results.setText(bestProvider);
+//        results.setText(bestProvider);
+    }
+
+
+    /**
+     * To know if user's done with add water point, then reload MainActivity.class when user pressed back button.
+     */
+    public void setResultIntent() {
+        Intent intent = new Intent();
+        intent.putExtra("code", "here is AddWaterPointActivity.class!");
+        setResult(RESULT_OK, intent);
     }
 
 
@@ -172,28 +182,70 @@ public class AddWaterPointActivity extends AppCompatActivity
             return;
         }
 
-        locationManager.requestLocationUpdates(bestProvider, 3000, 0, this);
-        Log.d("resBest", bestProvider + "");
+//        locationManager.requestLocationUpdates(bestProvider, 3000, 0, this);
+//        locationManager.requestLocationUpdates(locationManager.GPS_PROVIDER, 1000, 0, this);
 
+        Log.d("=**NETWORK**=", isNetwork + "");
+        Log.d("=**GPS**=", isGps + "");
+
+
+        locationManager.requestLocationUpdates(locationManager.NETWORK_PROVIDER, 1000, 0, this);
+        locationManager.requestLocationUpdates(locationManager.GPS_PROVIDER, 1000, 0, this);
+
+
+
+//        if (coordinateNet != null) {
+//            Log.d("=*network*=", coordinateNet);
+//        } else if (coordinate != null) {
+//            Log.d("=*gps*=", coordinate);
+//        }
+
+//        Log.d("=*gps*=", coordinate);
+//        Log.d("=*network*=", coordinateNet);
+
+        countDownTimer = new CountDownTimer(120000, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+//                Log.d("=countdown=", new SimpleDateFormat("s").format(millisUntilFinished));
+
+                if (coordinateNet != null) {
+                    Log.d("=*network*=", coordinateNet);
+                } else if (coordinate != null) {
+                    Log.d("=*gps*=", coordinate);
+                }
+            }
+
+            @Override
+            public void onFinish() {
+
+            }
+        }.start();
+
+//        Log.d("resBest", bestProvider + "");
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d("=Act2=", "destory");
+        countDownTimer.cancel();
 
     }
 
 
-
-
-
-    public String showLocationInfo(Location location)
+    public String showLocationInfoGps(Location location)
     {
         StringBuffer sb = new StringBuffer("");
 
         if (location != null) {
             sb.append(" 經度:" + location.getLongitude());
             sb.append(" 緯度:" + location.getLatitude());
-            sb.append(" provider:" + bestProvider);
+            sb.append(" provider:" + LocationManager.GPS_PROVIDER);
             longitude = location.getLongitude();
             latitude = location.getLatitude();
             Log.d("doubleLoc", longitude + "/" + latitude);
-            Log.d("sb1:", location.getLongitude() + "/" + location.getLatitude() + "/" + bestProvider);
+            Log.d("sb1:", location.getLongitude() + "/" + location.getLatitude() + "/" + LocationManager.GPS_PROVIDER);
         }
 
         coordinate = "(" + latitude + "," + longitude +")";
@@ -204,6 +256,30 @@ public class AddWaterPointActivity extends AppCompatActivity
         Log.d("xxresultsxx", sb + "");
 
         return coordinate;
+    }
+
+    public String showLocationInfoNetWork(Location location)
+    {
+        StringBuffer sb = new StringBuffer("");
+
+        if (location != null) {
+            sb.append(" 經度:" + location.getLongitude());
+            sb.append(" 緯度:" + location.getLatitude());
+            sb.append(" provider:" + LocationManager.NETWORK_PROVIDER);
+            longitude = location.getLongitude();
+            latitude = location.getLatitude();
+            Log.d("doubleLoc", longitude + "/" + latitude);
+            Log.d("sb1:", location.getLongitude() + "/" + location.getLatitude() + "/" + LocationManager.NETWORK_PROVIDER);
+        }
+
+        coordinateNet = "(" + latitude + "," + longitude +")";
+
+        results2.setText(sb.toString());
+
+        Log.d("coordinate", coordinateNet);
+        Log.d("xxresultsxx", sb + "");
+
+        return coordinateNet;
     }
 
 
@@ -315,7 +391,7 @@ public class AddWaterPointActivity extends AppCompatActivity
 
         postStringRequest(addWaterPointAPI);
 
-//        Toast.makeText(this, coor +
+//        Toast.makeText(this, coorGps +
 //                "/" + mWaterName +
 //                "/" + mWaterDescription +
 //                "/" + mWarmWater +
@@ -334,22 +410,28 @@ public class AddWaterPointActivity extends AppCompatActivity
     {
         queue = Volley.newRequestQueue(this);
         JSONObject params = new JSONObject();
+        isSuccess = false;
 
         try
         {
             params.put("waterPointName", mWaterName);
             params.put("description", mWaterDescription);
-            params.put("location", coor);
+            if(coorGps != null && coorNet != null) {
+                params.put("location", coorGps);
+            } else {
+                params.put("location", coorNet);
+            }
             params.put("hotWater", mHotWater);
             params.put("coldWater", mColdWater);
             params.put("warmWater", mWarmWater);
             params.put("icedWater", mIceWater);
             params.put("waterPointTypes", mWaterType);
             params.put("openingHours", mOpenTime);
-        }
-        catch (JSONException e)
+
+        } catch (JSONException e)
         {
             e.printStackTrace();
+            Log.d("=fail=", "新增水點失敗！");
         }
 
         JsonObjectRequest jsonRequest = new JsonObjectRequest
@@ -360,15 +442,16 @@ public class AddWaterPointActivity extends AppCompatActivity
                         try
                         {
                             String message = response.getString("status");
-                            Log.d("messagexxx", message +"");
-                            if(message.equals("0"))
-                            {
+                            Log.d("messagexxx", message + "");
+                            if(message.equals("0")) {
                                 Toast.makeText(getApplicationContext(), "水點新增成功！", Toast.LENGTH_LONG).show();
-//                                Intent intent = new Intent();
-//                                intent.setClass(AddWaterPointActivity.this, MapsActivity.class);
-//                                startActivity(intent);
-                            }
+                                isSuccess = true;
 
+                                /*如果新增水點成功則傳回true要求返回首頁時重新整理以利看到使用者新增的水點位置*/
+                                if(isSuccess) {
+                                    setResultIntent();
+                                }
+                            }
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -382,7 +465,6 @@ public class AddWaterPointActivity extends AppCompatActivity
                 });
 
         queue.add(jsonRequest);
-
     }
 
 
@@ -491,9 +573,19 @@ public class AddWaterPointActivity extends AppCompatActivity
 
 
     @Override
-    public void onLocationChanged(Location location)
-    {
-        coor = showLocationInfo(location);
+    public void onLocationChanged(Location location) {
+        String provider = location.getProvider();
+//        Log.d("=xPROVIDERx=", location.getProvider().toString());
+
+        if (provider.equals("network")) {
+            coorNet = showLocationInfoNetWork(location);
+        } else if(provider.equals("gps")) {
+            coorGps = showLocationInfoGps(location);
+        }
+
+
+//        coorGps = showLocationInfoGps(location);
+//        coorNet = showLocationInfoNetWork(location);
     }
 
     @Override
@@ -508,12 +600,12 @@ public class AddWaterPointActivity extends AppCompatActivity
 
             return;
         }
-        showLocationInfo(locationManager.getLastKnownLocation(provider));
+//        showLocationInfoGps(locationManager.getLastKnownLocation(provider));
     }
 
     @Override
     public void onProviderDisabled(String provider)
     {
-        showLocationInfo(null);
+//        showLocationInfoGps(null);
     }
 }

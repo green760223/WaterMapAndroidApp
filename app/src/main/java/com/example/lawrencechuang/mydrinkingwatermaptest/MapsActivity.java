@@ -2,13 +2,13 @@ package com.example.lawrencechuang.mydrinkingwatermaptest;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -28,6 +28,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -40,8 +41,9 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.maps.android.clustering.ClusterItem;
+import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
+import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -56,13 +58,17 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import com.rey.material.widget.ProgressView;
+import dmax.dialog.SpotsDialog;
+
 
 
 public class MapsActivity extends AppCompatActivity implements
         OnMapReadyCallback,
         GoogleMap.OnMyLocationButtonClickListener,
         ActivityCompat.OnRequestPermissionsResultCallback,
-        LocationListener, GoogleMap.OnCameraChangeListener {
+        LocationListener, GoogleMap.OnCameraChangeListener,
+        ClusterManager.OnClusterInfoWindowClickListener<ClusterMarker> {
 
 
     /**
@@ -104,6 +110,13 @@ public class MapsActivity extends AppCompatActivity implements
     private Cursor lastPoint;
     private ClusterManager<ClusterMarker> myItemClusterManager;
     private List<ClusterMarker> clusterMarkerItem;
+    private Cluster<ClusterMarker> clickedCluster;
+    private ClusterMarker clickedClusterItem;
+    private String queryGetAllPoint;
+    private static final int CODE = 1;
+    private ProgressView progressView;
+    private SpotsDialog spotsDialog;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,6 +128,9 @@ public class MapsActivity extends AppCompatActivity implements
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+//        progressView = (ProgressView) findViewById(R.id.progress);
+        spotsDialog = new SpotsDialog(MapsActivity.this);
+;
         /**
          * 初始化sqlite資料庫並建立資料表儲存上次離開app的經緯度位置與地圖縮放大小
          */
@@ -128,8 +144,6 @@ public class MapsActivity extends AppCompatActivity implements
         /*檢查是否具有建立資料表*/
 //        Boolean isTable = isTableExist();
 //        Log.d("=boolean=", isTable + "");
-
-
 
         //建立toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -193,10 +207,8 @@ public class MapsActivity extends AppCompatActivity implements
         Log.d("PROVIDER", getProvider());
 
         //取得所有水點基本資訊API位址
-        String s = "http://drinkingwatermap-watermap.rhcloud.com/WaterMap/api/v1/waterPoints/getAllBasicWaterPoints";
-        new getAllWaterPoint().execute(s);
-
-
+        queryGetAllPoint = "http://drinkingwatermap-watermap.rhcloud.com/WaterMap/api/v1/waterPoints/getAllBasicWaterPoints";
+        new getAllWaterPoint().execute(queryGetAllPoint);
     }
 
 
@@ -314,6 +326,7 @@ public class MapsActivity extends AppCompatActivity implements
        //mlocationMgr.requestLocationUpdates(provider, 3000, 0, this);
 //        Log.d("resBest", provider + "");
 
+
     }
 
 
@@ -348,6 +361,17 @@ public class MapsActivity extends AppCompatActivity implements
         Log.d("=DB=", "Database is close");
     }
 
+//    @Override
+//    protected void onRestart() {
+//        super.onRestart();
+//        Log.d("=restart=", "restart");
+////        Intent intent = getIntent();
+////        finish();
+////        startActivity(intent);
+//
+////        new getAllWaterPoint().execute(queryGetAllPoint);
+//    }
+//
 
     public String getProvider()
     {
@@ -380,12 +404,42 @@ public class MapsActivity extends AppCompatActivity implements
 
         myItemClusterManager = new ClusterManager<ClusterMarker>(this, mMap);
 
+        /**
+         * 測試客製化infowindow與marker icon
+         */
+//        myItemClusterManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<ClusterMarker>() {
+//            @Override
+//            public boolean onClusterItemClick(ClusterMarker clusterMarker) {
+//                Log.d("=CLICK=", clusterMarker.getPosition().toString());
+//                return false;
+//            }
+//        });
+
+
         /*multiListener here*/
         MultiListener multiListener = new MultiListener();
         multiListener.registerListener(myItemClusterManager);
         multiListener.registerListener(this);
         mMap.setOnCameraChangeListener(multiListener);
 
+        /*客製化marker icon*/
+        myItemClusterManager.setRenderer(new OwnIconRendered(this, mMap, myItemClusterManager));
+
+        mMap.setOnMarkerClickListener(myItemClusterManager);
+        mMap.setInfoWindowAdapter(myItemClusterManager.getMarkerManager());
+
+        mMap.setOnInfoWindowClickListener(myItemClusterManager);
+//        myItemClusterManager.setOnClusterItemInfoWindowClickListener();
+
+        myItemClusterManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<ClusterMarker>() {
+            @Override
+            public boolean onClusterItemClick(ClusterMarker clusterMarker) {
+                clickedClusterItem = clusterMarker;
+                return false;
+            }
+        });
+
+        myItemClusterManager.getMarkerCollection().setOnInfoWindowAdapter(new MyCustomAdapterForItems());
 
         //取消導航與切換到網路版google map
         mMap.getUiSettings().setMapToolbarEnabled(false);
@@ -470,6 +524,112 @@ public class MapsActivity extends AppCompatActivity implements
 
     }
 
+    public class MyCustomAdapterForItems implements GoogleMap.InfoWindowAdapter {
+
+        private View myContentView;
+
+        MyCustomAdapterForItems() {
+//            myContentView = getLayoutInflater().inflate(R.layout.custom_info_content, null);
+        }
+
+        @Override
+        public View getInfoWindow(Marker marker) {
+            myContentView = getLayoutInflater().inflate(R.layout.custom_info_window, null);
+            TextView title = (TextView) myContentView.findViewById(R.id.txtTitle);
+            TextView snippet = (TextView) myContentView.findViewById(R.id.txtSnippet);
+            TextView time = (TextView) myContentView.findViewById(R.id.txtTime);
+            TextView hotWater = (TextView) myContentView.findViewById(R.id.hot_water);
+            TextView warmWater = (TextView) myContentView.findViewById(R.id.warm_water);
+            TextView coldWater = (TextView) myContentView.findViewById(R.id.cold_water);
+            TextView iceWater = (TextView) myContentView.findViewById(R.id.ice_water);
+
+
+            title.setText(clickedClusterItem.getmName());
+
+            /*Description*/
+            if(clickedClusterItem.getmDescription() != null &&
+                    !clickedClusterItem.getmDescription().isEmpty()) {
+                if(clickedClusterItem.getmDescription().equals("null")) {
+                    snippet.setVisibility(snippet.GONE);
+                } else {
+                    snippet.setText(clickedClusterItem.getmDescription());
+                }
+            }
+
+            /*hot water*/
+            if(clickedClusterItem.getmHotWater() != null &&
+                    !clickedClusterItem.getmHotWater().isEmpty()) {
+                if(clickedClusterItem.getmHotWater().equals("1")) {
+                    hotWater.setText("熱");
+                } else {
+                    hotWater.setVisibility(hotWater.GONE);
+                }
+            }
+
+            /*warm water*/
+            if(clickedClusterItem.getmWarmWater() != null &&
+                    !clickedClusterItem.getmWarmWater().isEmpty()) {
+                if(clickedClusterItem.getmWarmWater().equals("1")) {
+                    warmWater.setText("溫");
+                } else {
+                    warmWater.setVisibility(warmWater.GONE);
+                }
+            }
+
+            /*cold water*/
+            if(clickedClusterItem.getmColdWater() != null &&
+                    !clickedClusterItem.getmColdWater().isEmpty()) {
+                if(clickedClusterItem.getmColdWater().equals("1")) {
+                    coldWater.setText("冷");
+                } else {
+                    coldWater.setVisibility(coldWater.GONE);
+                }
+            }
+
+            /*ice water*/
+            if(clickedClusterItem.getmIceWater() != null &&
+                    !clickedClusterItem.getmIceWater().isEmpty()) {
+                if(clickedClusterItem.getmIceWater().equals("1")) {
+                    iceWater.setText("冰");
+                } else {
+                    iceWater.setVisibility(iceWater.GONE);
+                }
+            }
+
+            return myContentView;
+        }
+
+        @Override
+        public View getInfoContents(Marker marker) {
+            return null;
+        }
+    }
+
+
+    @Override
+    public void onClusterInfoWindowClick(Cluster<ClusterMarker> cluster) {
+
+    }
+
+
+    /**
+    * To custom marker before clustering.
+    */
+   class OwnIconRendered extends DefaultClusterRenderer<ClusterMarker> {
+
+       public OwnIconRendered(Context context, GoogleMap map, ClusterManager<ClusterMarker> clusterManager) {
+           super(context, map, clusterManager);
+       }
+
+       @Override
+       protected void onBeforeClusterItemRendered(ClusterMarker clusterMarker, MarkerOptions markerOptions) {
+           markerOptions.icon(BitmapDescriptorFactory.fromResource(clusterMarker.getMarkerIcon()));
+           markerOptions.title(clusterMarker.getmName());
+           markerOptions.snippet(clusterMarker.getmDescription());
+           super.onBeforeClusterItemRendered(clusterMarker, markerOptions);
+       }
+   }
+
 
     public void enableMyLocation() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
@@ -483,7 +643,7 @@ public class MapsActivity extends AppCompatActivity implements
 
 
     /**
-     * Create multiple setOnCameraChangeListener() method
+     * To create multiple setOnCameraChangeListener() method
      */
     public class MultiListener implements GoogleMap.OnCameraChangeListener {
 
@@ -595,15 +755,37 @@ public class MapsActivity extends AppCompatActivity implements
     }
 
 
-    //切換至新增水點頁面
+    /**
+     * 切換至新增水點頁面
+     */
     public void addWaterPoint(View view) {
-        //Toast.makeText(MapsActivity.this, "Floating Button is clicked", Toast.LENGTH_SHORT).show();
 
-        //切換到新增水點頁面
-        Intent addWaterPoint = new Intent();
-        addWaterPoint.setClass(MapsActivity.this, AddWaterPointActivity.class);
-        startActivity(addWaterPoint);
+        boolean isOpen = isGpsOpen();
+
+        if(isOpen) {
+            /*切換到新增水點頁面*/
+            Intent addWaterPoint = new Intent();
+            addWaterPoint.setClass(MapsActivity.this, AddWaterPointActivity.class);
+            startActivityForResult(addWaterPoint, CODE);
+//            startActivity(addWaterPoint);
+        } else {
+            openGps();
+        }
         //overridePendingTransition(android.R.anim.slide_in_left,android.R.anim.slide_out_right);
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if(requestCode == CODE) {
+            if(resultCode == RESULT_OK) {
+                String result = data.getStringExtra("code");
+//                Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
+                new getAllWaterPoint().execute(queryGetAllPoint);
+            }
+        }
     }
 
 
@@ -613,10 +795,8 @@ public class MapsActivity extends AppCompatActivity implements
         String test = saveLocationOnCamera(position);
         //Log.d("=testCamera=", test);
 
-
         //Log.d("=position=", posLat + "/" + posLng + "/" + posZoom);
 //        Toast.makeText(MapsActivity.this, posLat + "/" + posLng + "/" + posZoom, Toast.LENGTH_SHORT).show();
-
     }
 
 
@@ -637,9 +817,27 @@ public class MapsActivity extends AppCompatActivity implements
     /**
      * 執行查詢所有水點API
      */
-    class getAllWaterPoint extends AsyncTask<String, Void, String> {
+    class getAllWaterPoint extends AsyncTask<String, Integer, String> {
+
+//        FrameLayout frameLayout = (FrameLayout) findViewById(progress_frame);
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+//            mDialog = new ProgressDialog(MapsActivity.this);
+//            mDialog.setMessage("讀取資料中請稍候...");
+//            mDialog.setCancelable(false);
+//            mDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+//            mDialog.show();
+//            progressView.start();
+//            spotsDialog.setTitle("讀取中...");
+            spotsDialog.show();
+        }
+
         @Override
         protected String doInBackground(String... params) {
+
+            int progress = 0;
             StringBuffer sb = new StringBuffer();
 
             try {
@@ -654,28 +852,49 @@ public class MapsActivity extends AppCompatActivity implements
                     line = in.readLine();
                     Log.d("sb", sb + "");
                 }
+
+
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
+//            while(progress <= 100) {
+//
+//                try {
+//                    Thread.sleep(100);
+//
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//                publishProgress(Integer.valueOf(progress));
+//                progress = progress + 5;
+////                progress = (int) (progress + Math.random()*10);
+//            }
+
             return sb.toString();
         }
 
         @Override
-        protected void onProgressUpdate(Void... values) {
-            super.onProgressUpdate(values);
+        protected void onProgressUpdate(Integer... progress) {
+//            super.onProgressUpdate(values);
+//            mDialog.setProgress(progress[0]);
+//            progressView.setProgress(progress[0]);
 
         }
 
         @Override
         protected void onPostExecute(String s) {
+//            mDialog.dismiss();
+//            progressView.stop();
+            spotsDialog.dismiss();
+
             Log.d("JSON", s);
             try {
                 //解析從api傳回來的json字串
                 JSONArray results = new JSONArray(s);
-                List<Marker> markers = new ArrayList<Marker>();
+//                List<Marker> markers = new ArrayList<Marker>();
                 clusterMarkerItem = new ArrayList<ClusterMarker>();
 
                 for (int i = 0; i < results.length(); i++) {
@@ -689,10 +908,15 @@ public class MapsActivity extends AppCompatActivity implements
                     waterPointsModel.setDescription(waterPoint.getString("description"));
                     waterPointsModelList.add(waterPointsModel);
 
-                    double lat = location.getDouble("longitude");
-                    double lng = location.getDouble("latitude");
+                    Double lat = location.getDouble("longitude");
+                    Double lng = location.getDouble("latitude");
                     String name = waterPoint.getString("waterPointName");
                     String description = waterPoint.getString("description");
+//                    String time = waterPoint.getString("");
+                    String hotWater = waterPoint.getString("hotWater");
+                    String warmWater = waterPoint.getString("warmWater");
+                    String coldWater = waterPoint.getString("coldWater");
+                    String iceWater = waterPoint.getString("icedWater");
                     Log.d("WaterPoint:", name + "/" + lat + "/" + lng);
 //                    Marker marker = mMap.addMarker(new MarkerOptions()
 //                                    .title(name)
@@ -705,14 +929,11 @@ public class MapsActivity extends AppCompatActivity implements
                     /**
                      * test cluster here
                      */
-                    clusterMarkerItem.add(new ClusterMarker(lat, lng));
-
-
+                    clusterMarkerItem.add(new ClusterMarker(lat, lng, name, R.drawable.waterdrop, description, null,
+                            hotWater, warmWater, coldWater, iceWater));
                 }
 
-                Log.d("markers:", markers.size() + "");
                 Log.d("=clusterMarkerItem=", clusterMarkerItem.size() + "");
-
 
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -722,7 +943,6 @@ public class MapsActivity extends AppCompatActivity implements
 
             /*在google map上強制一開始顯示clustering後座標結果*/
             myItemClusterManager.cluster();
-
         }
     }
 
@@ -837,6 +1057,5 @@ public class MapsActivity extends AppCompatActivity implements
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
-
 
 }
