@@ -129,7 +129,7 @@ public class MapsActivity extends AppCompatActivity implements
         mapFragment.getMapAsync(this);
 
 //        progressView = (ProgressView) findViewById(R.id.progress);
-        spotsDialog = new SpotsDialog(MapsActivity.this);
+        spotsDialog = new SpotsDialog(MapsActivity.this, R.style.custom_progress_dialog);
 ;
         /**
          * 初始化sqlite資料庫並建立資料表儲存上次離開app的經緯度位置與地圖縮放大小

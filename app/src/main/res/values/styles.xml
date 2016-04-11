@@ -29,4 +29,10 @@
         <item name="android:textColor">@color/colorPrimaryDark</item>
         <item name="android:textSize">14sp</item>
     </style>
+
+    <style name="custom_progress_dialog" parent="android:Theme.DeviceDefault.Light.Dialog">
+        <item name="DialogTitleAppearance">@android:style/TextAppearance.Medium</item>
+        <item name="DialogTitleText">水點讀取中...</item>
+        <item name="DialogSpotCount">5</item>
+    </style>
 </resources>
