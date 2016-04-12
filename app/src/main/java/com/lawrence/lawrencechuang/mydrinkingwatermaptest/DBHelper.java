@@ -1,9 +1,8 @@
-package com.example.lawrencechuang.mydrinkingwatermaptest;
+package com.lawrence.lawrencechuang.mydrinkingwatermaptest;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
 /**
  * Created by LawrenceChuang on 16/3/27.

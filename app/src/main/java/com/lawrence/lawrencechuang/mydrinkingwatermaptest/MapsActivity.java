@@ -1,4 +1,4 @@
-package com.example.lawrencechuang.mydrinkingwatermaptest;
+package com.lawrence.lawrencechuang.mydrinkingwatermaptest;
 
 import android.Manifest;
 import android.app.AlertDialog;

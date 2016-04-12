@@ -1,4 +1,4 @@
-package com.example.lawrencechuang.mydrinkingwatermaptest;
+package com.lawrence.lawrencechuang.mydrinkingwatermaptest;
 
 import org.junit.Test;
 

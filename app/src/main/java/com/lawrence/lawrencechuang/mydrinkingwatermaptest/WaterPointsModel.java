@@ -1,4 +1,4 @@
-package com.example.lawrencechuang.mydrinkingwatermaptest;
+package com.lawrence.lawrencechuang.mydrinkingwatermaptest;
 
 /**
  * Created by LawrenceChuang on 16/3/16.

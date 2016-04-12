@@ -1,4 +1,4 @@
-package com.example.lawrencechuang.mydrinkingwatermaptest;
+package com.lawrence.lawrencechuang.mydrinkingwatermaptest;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.clustering.ClusterItem;

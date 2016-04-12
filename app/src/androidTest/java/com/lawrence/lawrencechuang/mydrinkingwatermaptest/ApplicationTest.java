@@ -1,4 +1,4 @@
-package com.example.lawrencechuang.mydrinkingwatermaptest;
+package com.lawrence.lawrencechuang.mydrinkingwatermaptest;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;
