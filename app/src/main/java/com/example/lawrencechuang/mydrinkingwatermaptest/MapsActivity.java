@@ -58,8 +58,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import com.rey.material.widget.ProgressView;
-import dmax.dialog.SpotsDialog;
 
 
 
@@ -114,8 +112,7 @@ public class MapsActivity extends AppCompatActivity implements
     private ClusterMarker clickedClusterItem;
     private String queryGetAllPoint;
     private static final int CODE = 1;
-    private ProgressView progressView;
-    private SpotsDialog spotsDialog;
+    private ProgressDialog progressDialog;
 
 
     @Override
@@ -128,9 +125,7 @@ public class MapsActivity extends AppCompatActivity implements
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-//        progressView = (ProgressView) findViewById(R.id.progress);
-        spotsDialog = new SpotsDialog(MapsActivity.this, R.style.custom_progress_dialog);
-;
+
         /**
          * 初始化sqlite資料庫並建立資料表儲存上次離開app的經緯度位置與地圖縮放大小
          */
@@ -819,8 +814,6 @@ public class MapsActivity extends AppCompatActivity implements
      */
     class getAllWaterPoint extends AsyncTask<String, Integer, String> {
 
-//        FrameLayout frameLayout = (FrameLayout) findViewById(progress_frame);
-
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -829,15 +822,15 @@ public class MapsActivity extends AppCompatActivity implements
 //            mDialog.setCancelable(false);
 //            mDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 //            mDialog.show();
-//            progressView.start();
-//            spotsDialog.setTitle("讀取中...");
-            spotsDialog.show();
+            progressDialog = new ProgressDialog(MapsActivity.this);
+            progressDialog.setTitle("請稍候...");
+            progressDialog.setMessage("水點資訊讀取中.");
+            progressDialog.show();
         }
 
         @Override
         protected String doInBackground(String... params) {
 
-            int progress = 0;
             StringBuffer sb = new StringBuffer();
 
             try {
@@ -860,35 +853,18 @@ public class MapsActivity extends AppCompatActivity implements
                 e.printStackTrace();
             }
 
-//            while(progress <= 100) {
-//
-//                try {
-//                    Thread.sleep(100);
-//
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//                publishProgress(Integer.valueOf(progress));
-//                progress = progress + 5;
-////                progress = (int) (progress + Math.random()*10);
-//            }
-
             return sb.toString();
         }
 
         @Override
         protected void onProgressUpdate(Integer... progress) {
-//            super.onProgressUpdate(values);
-//            mDialog.setProgress(progress[0]);
-//            progressView.setProgress(progress[0]);
-
+            super.onProgressUpdate(progress);
         }
 
         @Override
         protected void onPostExecute(String s) {
-//            mDialog.dismiss();
-//            progressView.stop();
-            spotsDialog.dismiss();
+
+            progressDialog.dismiss();
 
             Log.d("JSON", s);
             try {
