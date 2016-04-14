@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">My Drinking Water Map Test</string>
-    <string name="title_activity_maps">Map</string>
+    <string name="title_activity_maps">不喝會死</string>
     <string name="location_permission_denied" />
     <string name="permission_required_toast" />
     <string name="permission_rationale_location" />
