@@ -7,7 +7,7 @@
     https://console.developers.google.com/flows/enableapi?apiid=maps_android_backend&keyType=CLIENT_SIDE_ANDROID&r=64:DE:25:F0:58:C1:B4:3A:A2:AD:A3:F5:8F:CE:3E:78:1B:26:69:D3%3Bcom.example.lawrencechuang.mydrinkingwatermaptest
 
     You can also add your credentials to an existing key, using this line:
-    64:DE:25:F0:58:C1:B4:3A:A2:AD:A3:F5:8F:CE:3E:78:1B:26:69:D3;com.example.lawrencechuang.mydrinkingwatermaptest
+    64:DE:25:F0:58:C1:B4:3A:A2:AD:A3:F5:8F:CE:3E:78:1B:26:69:D3;com.lawrence.lawrencechuang.mydrinkingwatermaptest
 
     Alternatively, follow the directions here:
     https://developers.google.com/maps/documentation/android/start#get-key
@@ -16,6 +16,6 @@
     string in this file.
     -->
     <string name="google_maps_key" translatable="false" templateMergeStrategy="preserve">
-        YOUR_KEY_HERE
+        AIzaSyCdx18DP3Yi7CJ9bn5G4PY9qYIIjOcx90E
     </string>
 </resources>

@@ -87,14 +87,60 @@
             android:layout_weight="1" />
     </LinearLayout>
 
-    <TextView
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="11sp"
-        android:text="開放時間 8:00-23:00"
-        android:paddingTop="5dp"
-        android:id="@+id/txtTime"
-        android:textColor="#000000"
-        android:layout_gravity="center_horizontal"/>
+        android:layout_gravity="center_horizontal"
+        android:id="@+id/txtLinearOpen">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="11sp"
+            android:text="開放中"
+            android:id="@+id/txtOpen"
+            android:paddingTop="5dp"
+            android:textColor="#008c28"
+            android:paddingRight="5dp"
+            android:layout_gravity="center_horizontal"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="11sp"
+            android:paddingTop="5dp"
+            android:id="@+id/txtTimeOpen"
+            android:textColor="#000000"
+            android:layout_gravity="center_horizontal"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:id="@+id/txtLinearClose">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="11sp"
+            android:text="休息中"
+            android:id="@+id/txtClose"
+            android:paddingTop="5dp"
+            android:textColor="#cc0000"
+            android:paddingRight="5dp"
+            android:layout_gravity="center_horizontal"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="11sp"
+            android:paddingTop="5dp"
+            android:text="08:00-23:00"
+            android:id="@+id/txtTimeClose"
+            android:textColor="#000000"
+            android:layout_gravity="center_horizontal"/>
+    </LinearLayout>
+
 
 </LinearLayout>

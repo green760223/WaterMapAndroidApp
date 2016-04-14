@@ -26,6 +26,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
@@ -143,7 +144,7 @@ public class MapsActivity extends AppCompatActivity implements
         //建立toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle("Water Map");
-        toolbar.setLogo(R.mipmap.waterdrop);
+        toolbar.setLogo(R.drawable.waterdrop);
         setSupportActionBar(toolbar);  //setNavigationIcon要在setSupportActionBar之後才會生效
         toolbar.setNavigationIcon(R.drawable.ic_menu_white);
 
@@ -202,7 +203,7 @@ public class MapsActivity extends AppCompatActivity implements
         Log.d("PROVIDER", getProvider());
 
         //取得所有水點基本資訊API位址
-        queryGetAllPoint = "http://drinkingwatermap-watermap.rhcloud.com/WaterMap/api/v1/waterPoints/getAllBasicWaterPoints";
+        queryGetAllPoint = "http://drinkingwatermap-watermap.rhcloud.com/WaterMap/api/v1/waterPoints/getAllDetailWaterPoints";
         new getAllWaterPoint().execute(queryGetAllPoint);
     }
 
@@ -356,17 +357,12 @@ public class MapsActivity extends AppCompatActivity implements
         Log.d("=DB=", "Database is close");
     }
 
-//    @Override
-//    protected void onRestart() {
-//        super.onRestart();
-//        Log.d("=restart=", "restart");
-////        Intent intent = getIntent();
-////        finish();
-////        startActivity(intent);
-//
-////        new getAllWaterPoint().execute(queryGetAllPoint);
-//    }
-//
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+    }
+
 
     public String getProvider()
     {
@@ -411,7 +407,7 @@ public class MapsActivity extends AppCompatActivity implements
 //        });
 
 
-        /*multiListener here*/
+        /*multiListener method*/
         MultiListener multiListener = new MultiListener();
         multiListener.registerListener(myItemClusterManager);
         multiListener.registerListener(this);
@@ -445,7 +441,7 @@ public class MapsActivity extends AppCompatActivity implements
 //            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(point, 15));
 //        }
 
-        /**回到使用者最後離開app的畫面座標, 若第一次安裝app則預設定位到臺北101*/
+        /*回到使用者最後離開app的畫面座標, 若第一次安裝app則預設定位到臺北101*/
         if(lastPoint.getCount() != 0) {
             /*move camera to the location that user last time visited.*/
             LatLng point = new LatLng(lastLat, lastLng);
@@ -530,14 +526,28 @@ public class MapsActivity extends AppCompatActivity implements
         @Override
         public View getInfoWindow(Marker marker) {
             myContentView = getLayoutInflater().inflate(R.layout.custom_info_window, null);
+
+            /*marker's title*/
             TextView title = (TextView) myContentView.findViewById(R.id.txtTitle);
+
+            /*marker's description*/
             TextView snippet = (TextView) myContentView.findViewById(R.id.txtSnippet);
-            TextView time = (TextView) myContentView.findViewById(R.id.txtTime);
+
+            /*marker's opening time*/
+            TextView time = (TextView) myContentView.findViewById(R.id.txtTimeOpen);
+            TextView timeTvOpen = (TextView) myContentView.findViewById(R.id.txtOpen);
+            TextView txtClose = (TextView) myContentView.findViewById(R.id.txtClose);
+            TextView txtTimeClose = (TextView) myContentView.findViewById(R.id.txtTimeClose);
+
+            /*marker's water infomation*/
             TextView hotWater = (TextView) myContentView.findViewById(R.id.hot_water);
             TextView warmWater = (TextView) myContentView.findViewById(R.id.warm_water);
             TextView coldWater = (TextView) myContentView.findViewById(R.id.cold_water);
             TextView iceWater = (TextView) myContentView.findViewById(R.id.ice_water);
 
+            /*marker's opening time layout*/
+            LinearLayout txtLinearOpen = (LinearLayout) myContentView.findViewById(R.id.txtLinearOpen);
+            LinearLayout txtLinearClose = (LinearLayout) myContentView.findViewById(R.id.txtLinearClose);
 
             title.setText(clickedClusterItem.getmName());
 
@@ -589,6 +599,31 @@ public class MapsActivity extends AppCompatActivity implements
                 } else {
                     iceWater.setVisibility(iceWater.GONE);
                 }
+            }
+
+            /*opening time*/
+            if(clickedClusterItem.getOpenTime() != null &&
+                    !clickedClusterItem.getOpenTime().isEmpty() &&
+                    !clickedClusterItem.getOpenTime().equals("null")) {
+                Log.d("=openTime=", clickedClusterItem.getOpenTime());
+
+                txtLinearClose.setVisibility(txtLinearClose.GONE);
+
+                String timeOpen = clickedClusterItem.getOpenTime();
+
+                if(clickedClusterItem.getOpenTime() != null &&
+                        !clickedClusterItem.getOpenTime().isEmpty()) {
+                    if(clickedClusterItem.getOpenTime().equals("24/7")) {
+                        time.setText("全日開放");
+                    } else {
+                        time.setText(timeOpen);
+                    }
+                } else {
+
+                }
+            } else {
+                txtLinearOpen.setVisibility(txtLinearOpen.GONE);
+                txtLinearClose.setVisibility(txtLinearClose.GONE);
             }
 
             return myContentView;
@@ -817,14 +852,9 @@ public class MapsActivity extends AppCompatActivity implements
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-//            mDialog = new ProgressDialog(MapsActivity.this);
-//            mDialog.setMessage("讀取資料中請稍候...");
-//            mDialog.setCancelable(false);
-//            mDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-//            mDialog.show();
             progressDialog = new ProgressDialog(MapsActivity.this);
             progressDialog.setTitle("請稍候...");
-            progressDialog.setMessage("水點資訊讀取中.");
+            progressDialog.setMessage("水點資訊讀取中");
             progressDialog.show();
         }
 
@@ -888,7 +918,7 @@ public class MapsActivity extends AppCompatActivity implements
                     Double lng = location.getDouble("latitude");
                     String name = waterPoint.getString("waterPointName");
                     String description = waterPoint.getString("description");
-//                    String time = waterPoint.getString("");
+                    String time = waterPoint.getString("openingHours");
                     String hotWater = waterPoint.getString("hotWater");
                     String warmWater = waterPoint.getString("warmWater");
                     String coldWater = waterPoint.getString("coldWater");
@@ -905,7 +935,7 @@ public class MapsActivity extends AppCompatActivity implements
                     /**
                      * test cluster here
                      */
-                    clusterMarkerItem.add(new ClusterMarker(lat, lng, name, R.drawable.waterdrop, description, null,
+                    clusterMarkerItem.add(new ClusterMarker(lat, lng, name, R.drawable.waterdrop, description, time,
                             hotWater, warmWater, coldWater, iceWater));
                 }
 
