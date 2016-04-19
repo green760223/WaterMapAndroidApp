@@ -12,6 +12,8 @@ import android.database.Cursor;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -114,6 +116,7 @@ public class MapsActivity extends AppCompatActivity implements
     private String queryGetAllPoint;
     private static final int CODE = 1;
     private ProgressDialog progressDialog;
+    private boolean isConnect;
 
 
     @Override
@@ -126,7 +129,6 @@ public class MapsActivity extends AppCompatActivity implements
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-
         /**
          * 初始化sqlite資料庫並建立資料表儲存上次離開app的經緯度位置與地圖縮放大小
          */
@@ -137,17 +139,12 @@ public class MapsActivity extends AppCompatActivity implements
          */
         queryLastPositionFromSQLite();
 
-        /*檢查是否具有建立資料表*/
-//        Boolean isTable = isTableExist();
-//        Log.d("=boolean=", isTable + "");
-
         //建立toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle("Water Map");
         toolbar.setLogo(R.drawable.waterdrop);
         setSupportActionBar(toolbar);  //setNavigationIcon要在setSupportActionBar之後才會生效
         toolbar.setNavigationIcon(R.drawable.ic_menu_white);
-
         toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
@@ -174,7 +171,6 @@ public class MapsActivity extends AppCompatActivity implements
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer);
         drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.drawer_open, R.string.drawer_close);
         drawerToggle.syncState();
-
         drawerLayout.setDrawerListener(drawerToggle);
 
         //讀取navigation的欄位名稱
@@ -202,28 +198,27 @@ public class MapsActivity extends AppCompatActivity implements
 //        getProvider();
         Log.d("PROVIDER", getProvider());
 
-        //取得所有水點基本資訊API位址
-        queryGetAllPoint = "http://drinkingwatermap-watermap.rhcloud.com/WaterMap/api/v1/waterPoints/getAllDetailWaterPoints";
-        new getAllWaterPoint().execute(queryGetAllPoint);
+        /*檢查當前裝置是否有網路連線,如果當下有網路連線才會執行呼叫查詢水點api*/
+        isConnect = isConnected();
+        if(isConnect) {
+            //取得所有水點基本資訊API位址
+            queryGetAllPoint = "http://drinkingwatermap-watermap.rhcloud.com/WaterMap/api/v1/waterPoints/getAllDetailWaterPoints";
+            new getAllWaterPoint().execute(queryGetAllPoint);
+        } else {
+            new AlertDialog.Builder(MapsActivity.this)
+                    .setTitle("發生錯誤")
+                    .setMessage("沒有網路連線，請開啟網路連線後重新進入！").show();
+        }
     }
 
 
     @Override
-    protected void onResume()
-    {
-
+    protected void onResume() {
         super.onResume();
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-        {
-            return;
-        }
-
-        isGpsEnable = mlocationMgr.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        isNetworkEnable = mlocationMgr.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-        Log.d("=xisGpsEnablex=", isGpsEnable + "");
-        Log.d("=xisNetWorkEnablex=", isNetworkEnable + "");
-
+//        isGpsEnable = mlocationMgr.isProviderEnabled(LocationManager.GPS_PROVIDER);
+//        isNetworkEnable = mlocationMgr.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+//        Log.d("=xisGpsEnablex=", isGpsEnable + "");
+//        Log.d("=xisNetWorkEnablex=", isNetworkEnable + "");
 
         /**
          * gps and network同時關閉
@@ -317,12 +312,6 @@ public class MapsActivity extends AppCompatActivity implements
 //                }
 //            }
 //        }
-
-
-       //mlocationMgr.requestLocationUpdates(provider, 3000, 0, this);
-//        Log.d("resBest", provider + "");
-
-
     }
 
 
@@ -344,7 +333,6 @@ public class MapsActivity extends AppCompatActivity implements
     protected void onStop() {
         super.onStop();
         Log.d("=stop=", "stop" + "/" + posResult);
-
     }
 
 
@@ -352,7 +340,11 @@ public class MapsActivity extends AppCompatActivity implements
     protected void onDestroy() {
         super.onDestroy();
         Log.d("=destroy=", "position before destroy: " + posResult);
+
+        /*寫入使用者最後離開app前的地圖座標*/
         insertPosition(posResult);
+
+        /*關閉資料庫連線*/
         helper.close();
         Log.d("=DB=", "Database is close");
     }
@@ -364,8 +356,7 @@ public class MapsActivity extends AppCompatActivity implements
     }
 
 
-    public String getProvider()
-    {
+    public String getProvider() {
         if(mlocationMgr.isProviderEnabled(LocationManager.GPS_PROVIDER))
         {
             provider = LocationManager.GPS_PROVIDER;
@@ -392,7 +383,6 @@ public class MapsActivity extends AppCompatActivity implements
     public void onMapReady(GoogleMap googleMap) {
 
         mMap = googleMap;
-
         myItemClusterManager = new ClusterManager<ClusterMarker>(this, mMap);
 
         /**
@@ -406,7 +396,6 @@ public class MapsActivity extends AppCompatActivity implements
 //            }
 //        });
 
-
         /*multiListener method*/
         MultiListener multiListener = new MultiListener();
         multiListener.registerListener(myItemClusterManager);
@@ -415,13 +404,10 @@ public class MapsActivity extends AppCompatActivity implements
 
         /*客製化marker icon*/
         myItemClusterManager.setRenderer(new OwnIconRendered(this, mMap, myItemClusterManager));
-
         mMap.setOnMarkerClickListener(myItemClusterManager);
         mMap.setInfoWindowAdapter(myItemClusterManager.getMarkerManager());
-
         mMap.setOnInfoWindowClickListener(myItemClusterManager);
 //        myItemClusterManager.setOnClusterItemInfoWindowClickListener();
-
         myItemClusterManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<ClusterMarker>() {
             @Override
             public boolean onClusterItemClick(ClusterMarker clusterMarker) {
@@ -429,17 +415,10 @@ public class MapsActivity extends AppCompatActivity implements
                 return false;
             }
         });
-
         myItemClusterManager.getMarkerCollection().setOnInfoWindowAdapter(new MyCustomAdapterForItems());
 
         //取消導航與切換到網路版google map
         mMap.getUiSettings().setMapToolbarEnabled(false);
-
-//        if(coor != null)
-//        {
-//            LatLng point = new LatLng(coor.getLatitude(), coor.getLongitude());
-//            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(point, 15));
-//        }
 
         /*回到使用者最後離開app的畫面座標, 若第一次安裝app則預設定位到臺北101*/
         if(lastPoint.getCount() != 0) {
@@ -512,7 +491,6 @@ public class MapsActivity extends AppCompatActivity implements
 //        {
 //            openGps();
 //        }
-
     }
 
     public class MyCustomAdapterForItems implements GoogleMap.InfoWindowAdapter {
@@ -643,7 +621,7 @@ public class MapsActivity extends AppCompatActivity implements
 
 
     /**
-    * To custom marker before clustering.
+    * To custom marker‘s icon before clustering.
     */
    class OwnIconRendered extends DefaultClusterRenderer<ClusterMarker> {
 
@@ -695,14 +673,8 @@ public class MapsActivity extends AppCompatActivity implements
 
     @Override
     public boolean onMyLocationButtonClick() {
-
         //偵測使用者是否開啟GPS，若無則導引至開啟GPS設定頁面
         openGps();
-
-        if (isGpsOpen()) {
-            Toast.makeText(this, "位置定位中", Toast.LENGTH_SHORT).show();
-        }
-
         return false;
     }
 
@@ -736,7 +708,7 @@ public class MapsActivity extends AppCompatActivity implements
 
 
     /**
-     * 判斷GPS是否開啟，GPS或者AGPS開啟一個就認為是開啟的
+     * 判斷GPS是否開啟
      */
     private boolean isGpsOpen() {
         mlocationMgr = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
@@ -745,13 +717,15 @@ public class MapsActivity extends AppCompatActivity implements
         boolean gps = mlocationMgr.isProviderEnabled(LocationManager.GPS_PROVIDER);
 
         //通過WLAN或移動網路(3G/2G)確定的位置（也稱作AGPS，輔助GPS定位。主要用於在室內或遮蓋物（建築群或茂密的深林等）密集的地方定位）
-        boolean network = mlocationMgr.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-
-
+//        boolean network = mlocationMgr.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
         //只要其中一個開啟就回傳true
-        if (gps == true || network == true) {
-            Log.d("==both==", gps + "/" + network);
+//        if (gps == true || network == true) {
+//            Log.d("==both==", gps + "/" + network);
+//            return true;
+//        }
+
+        if(gps) {
             return true;
         }
 
@@ -778,7 +752,7 @@ public class MapsActivity extends AppCompatActivity implements
                     .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            Toast.makeText(MapsActivity.this, "未開啟定位服務，無法取得當前位置!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MapsActivity.this, "未開啟定位服務，無法取得GPS訊號!", Toast.LENGTH_SHORT).show();
                         }
                     }).show();
         }
@@ -801,7 +775,6 @@ public class MapsActivity extends AppCompatActivity implements
         } else {
             openGps();
         }
-        //overridePendingTransition(android.R.anim.slide_in_left,android.R.anim.slide_out_right);
     }
 
 
@@ -812,7 +785,6 @@ public class MapsActivity extends AppCompatActivity implements
         if(requestCode == CODE) {
             if(resultCode == RESULT_OK) {
                 String result = data.getStringExtra("code");
-//                Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
                 new getAllWaterPoint().execute(queryGetAllPoint);
             }
         }
@@ -821,7 +793,6 @@ public class MapsActivity extends AppCompatActivity implements
 
     @Override
     public void onCameraChange(CameraPosition position) {
-
         String test = saveLocationOnCamera(position);
         //Log.d("=testCamera=", test);
 
@@ -953,8 +924,10 @@ public class MapsActivity extends AppCompatActivity implements
     }
 
 
+    /**
+     *  將使用者最後離開app前的座標寫入sqlite資料庫
+     */
     public void insertPosition(String position) {
-
         String[] positionResult = position.split("/");
         Double lat = Double.parseDouble(positionResult[0]);
         Double lng = Double.parseDouble(positionResult[1]);
@@ -971,7 +944,6 @@ public class MapsActivity extends AppCompatActivity implements
         long id = helper.getWritableDatabase().insert("location_table", null, values);
 
         Log.d("=id=", id + "");
-
     }
 
 
@@ -1028,11 +1000,7 @@ public class MapsActivity extends AppCompatActivity implements
     public void onLocationChanged(Location location) {
         coor = location;
         Log.d("coor", coor + "");
-
         Log.d("==location==", location + "");
-
-//        mMap.animateCamera(CameraUpdateFactory.newLatLng(
-//                new LatLng(location.getLatitude(), location.getLongitude())));
     }
 
     @Override
@@ -1042,20 +1010,15 @@ public class MapsActivity extends AppCompatActivity implements
 
     @Override
     public void onProviderEnabled(String provider) {
-
-        Log.d("enableStringProvide", provider + "");
-        Toast.makeText(MapsActivity.this, provider + "定位功能開啟", Toast.LENGTH_LONG).show();
-
+//        Log.d("enableStringProvide", provider + "");
+//        Toast.makeText(MapsActivity.this, provider + "定位功能開啟", Toast.LENGTH_LONG).show();
     }
 
     @Override
     public void onProviderDisabled(String provider) {
-
-        Log.d("diableStringProvide", provider + "");
-        Toast.makeText(MapsActivity.this, provider + "定位功能關閉", Toast.LENGTH_LONG).show();
-
+//        Log.d("diableStringProvide", provider + "");
+//        Toast.makeText(MapsActivity.this, provider + "定位功能關閉", Toast.LENGTH_LONG).show();
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -1064,4 +1027,17 @@ public class MapsActivity extends AppCompatActivity implements
         return true;
     }
 
+    /**
+     * 檢查目前裝置網路是否連線
+     */
+    private boolean isConnected() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = cm.getActiveNetworkInfo();
+
+        if (networkInfo != null && networkInfo.isConnected()) {
+            return true;
+        }
+
+        return false;
+    }
 }
