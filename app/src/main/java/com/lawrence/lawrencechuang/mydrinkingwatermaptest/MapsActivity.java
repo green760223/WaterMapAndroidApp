@@ -27,6 +27,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -64,12 +65,14 @@ import java.util.List;
 
 
 
+
 public class MapsActivity extends AppCompatActivity implements
         OnMapReadyCallback,
         GoogleMap.OnMyLocationButtonClickListener,
         ActivityCompat.OnRequestPermissionsResultCallback,
         LocationListener, GoogleMap.OnCameraChangeListener,
-        ClusterManager.OnClusterInfoWindowClickListener<ClusterMarker> {
+        ClusterManager.OnClusterInfoWindowClickListener<ClusterMarker>,
+        GoogleMap.OnMapClickListener, ClusterManager.OnClusterItemClickListener<ClusterMarker> {
 
 
     /**
@@ -117,6 +120,10 @@ public class MapsActivity extends AppCompatActivity implements
     private static final int CODE = 1;
     private ProgressDialog progressDialog;
     private boolean isConnect;
+    private String queryPointsNearBy;
+    private Boolean isMapClick = false;
+    private Boolean isMarkClick;
+    private Boolean isUp = false;
 
 
     @Override
@@ -201,14 +208,46 @@ public class MapsActivity extends AppCompatActivity implements
         /*檢查當前裝置是否有網路連線,如果當下有網路連線才會執行呼叫查詢水點api*/
         isConnect = isConnected();
         if(isConnect) {
-            //取得所有水點基本資訊API位址
-            queryGetAllPoint = "http://drinkingwatermap-watermap.rhcloud.com/WaterMap/api/v1/waterPoints/getAllDetailWaterPoints";
-            new getAllWaterPoint().execute(queryGetAllPoint);
+            if(lastLat != null && lastLng != null) {
+                Log.d("=kkkk=", lastLat + "/" + lastLng);
+                //取得所有水點基本資訊API位址
+                queryGetAllPoint = "http://androidappapi-watermap.rhcloud.com/WaterMap/api/v1/waterPoints/getAllDetailWaterPoints";
+                //取得目前位置附近1公里的水點資訊API位址
+                queryPointsNearBy = "http://androidappapi-watermap.rhcloud.com/WaterMap/api/v1/waterPoints/getWaterPointsNearBy?latitude=" + lastLat + "&longitude=" + lastLng + "&area=1";
+                new getAllWaterPoint().execute(queryPointsNearBy);
+            } else {
+                String defaultAPI = "http://androidappapi-watermap.rhcloud.com/WaterMap/api/v1/waterPoints/getWaterPointsNearBy?latitude=" + 25.0334784 + "&longitude=" + 121.5618758 + "&area=1";
+                new getAllWaterPoint().execute(defaultAPI);
+            }
+
         } else {
             new AlertDialog.Builder(MapsActivity.this)
                     .setTitle("發生錯誤")
                     .setMessage("沒有網路連線，請開啟網路連線後重新進入！").show();
         }
+    }
+
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        isUp = false;
+
+        switch (ev.getAction()) {
+            case MotionEvent.ACTION_UP:
+                Log.d("=up=", "手指已離開螢幕");
+                isUp = true;
+//                Log.d("=up2=", isMarkClick + "");
+//                String queryPointsNearBy = "http://androidappapi-watermap.rhcloud.com/WaterMap/api/v1/waterPoints/getWaterPointsNearBy?latitude=" + posLat + "&longitude=" + posLng + "&area=1";
+//                new getAllWaterPoint().execute(queryPointsNearBy);
+                break;
+            case MotionEvent.ACTION_DOWN:
+                isMarkClick = false;
+                Log.d("=up2=", isMarkClick + "");
+                break;
+
+
+        }
+        return super.dispatchTouchEvent(ev);
     }
 
 
@@ -383,6 +422,12 @@ public class MapsActivity extends AppCompatActivity implements
     public void onMapReady(GoogleMap googleMap) {
 
         mMap = googleMap;
+
+        //取消導航與切換到網路版google map
+        mMap.getUiSettings().setMapToolbarEnabled(false);
+        mMap.getUiSettings().setMyLocationButtonEnabled(true);
+        enableMyLocation();
+
         myItemClusterManager = new ClusterManager<ClusterMarker>(this, mMap);
 
         /**
@@ -407,18 +452,22 @@ public class MapsActivity extends AppCompatActivity implements
         mMap.setOnMarkerClickListener(myItemClusterManager);
         mMap.setInfoWindowAdapter(myItemClusterManager.getMarkerManager());
         mMap.setOnInfoWindowClickListener(myItemClusterManager);
+        mMap.setOnMapClickListener(this);
 //        myItemClusterManager.setOnClusterItemInfoWindowClickListener();
-        myItemClusterManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<ClusterMarker>() {
-            @Override
-            public boolean onClusterItemClick(ClusterMarker clusterMarker) {
-                clickedClusterItem = clusterMarker;
-                return false;
-            }
-        });
+//        myItemClusterManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<ClusterMarker>() {
+//            @Override
+//            public boolean onClusterItemClick(ClusterMarker clusterMarker) {
+//                clickedClusterItem = clusterMarker;
+////                isMarkClick = true;
+////                Log.d("xxxClusterItemxxx", "Clu.ItemClick" + isMarkClick);
+////                Log.d("xxxClusterItemxxx", "");
+//                return false;
+//            }
+//        });
+
+        myItemClusterManager.setOnClusterItemClickListener(this);
         myItemClusterManager.getMarkerCollection().setOnInfoWindowAdapter(new MyCustomAdapterForItems());
 
-        //取消導航與切換到網路版google map
-        mMap.getUiSettings().setMapToolbarEnabled(false);
 
         /*回到使用者最後離開app的畫面座標, 若第一次安裝app則預設定位到臺北101*/
         if(lastPoint.getCount() != 0) {
@@ -441,6 +490,10 @@ public class MapsActivity extends AppCompatActivity implements
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
+
+
+
+//        mMap.getUiSettings().setMyLocationButtonEnabled(true);
 
 //        Location location = mlocationMgr.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 //        Log.d("locationGPS", location.getLatitude() + "/" + location.getLongitude());
@@ -475,7 +528,8 @@ public class MapsActivity extends AppCompatActivity implements
 
         //To get users's location
         mMap.setOnMyLocationButtonClickListener((GoogleMap.OnMyLocationButtonClickListener) this);
-        enableMyLocation();
+        mMap.setMyLocationEnabled(true);
+//        enableMyLocation();
 
 //        Log.d("gps", isGpsOpen() + "");
 
@@ -492,6 +546,34 @@ public class MapsActivity extends AppCompatActivity implements
 //            openGps();
 //        }
     }
+
+    @Override
+    public void onMapClick(LatLng latLng) {
+//        if(posLat != null & posLng != null) {
+//            String queryPointsNearBy = "http://androidappapi-watermap.rhcloud.com/WaterMap/api/v1/waterPoints/getWaterPointsNearBy?latitude=" + posLat + "&longitude=" + posLng + "&area=1";
+//            Log.d("=onMapClick=", "MapClick");
+////                new getAllWaterPoint().execute(queryPointsNearBy);
+//        }
+
+    }
+
+    @Override
+    public boolean onClusterItemClick(ClusterMarker clusterMarker) {
+        clickedClusterItem = clusterMarker;
+
+        isMarkClick = true;
+        Log.d("xxClusterClickxx", isMarkClick+"");
+//        Log.d("xBeforeOnClusterItemx", isMarkClick+"");
+//
+//        if(clickedClusterItem != null) {
+//            isMarkClick = true;
+//            Log.d("xAfterOnClusterItemx", isMarkClick+"");
+//        }
+
+        return false;
+    }
+
+
 
     public class MyCustomAdapterForItems implements GoogleMap.InfoWindowAdapter {
 
@@ -663,12 +745,80 @@ public class MapsActivity extends AppCompatActivity implements
 
         @Override
         public void onCameraChange(CameraPosition cameraPosition) {
+//              isMarkClick = false;
+//              Log.d("xCameraChangex", isMarkClick + "");
+//            Double lngStart = cameraPosition.target.longitude;
+//            Double latStart = cameraPosition.target.latitude;
+//            Log.d("=APIListener=", latStart + "/" + lngStart);
+//            if(posLat != null & posLng != null) {
+//                String queryPointsNearBy = "http://androidappapi-watermap.rhcloud.com/WaterMap/api/v1/waterPoints/getWaterPointsNearBy?latitude=" + posLat + "&longitude=" + posLng + "&area=1";
+////            Log.d("=apiAddress=", queryPointsNearBy);
+//                new getAllWaterPoint().execute(queryPointsNearBy);
+//            }
+//            Log.d("=OnCameraChange=", cameraPosition.target.latitude + "/" + cameraPosition.target.longitude);
+//            Toast.makeText(MapsActivity.this, "位置變動中!", Toast.LENGTH_SHORT).show();
+
+
             for (GoogleMap.OnCameraChangeListener ccl : multiListener) {
                 ccl.onCameraChange(cameraPosition);
-                Log.d("=multi=", ccl.toString());
+                String name = ccl.getClass().getName();
+                if(name.contains("MapsActivity")) {
+                    Log.d("xxHIxx", "tag");
+                    if(isUp) {
+                        if(!isMarkClick) {
+                            if(posLat != null & posLng != null) {
+                                String queryPointsNearBy = "http://androidappapi-watermap.rhcloud.com/WaterMap/api/v1/waterPoints/getWaterPointsNearBy?latitude=" + posLat + "&longitude=" + posLng + "&area=1";
+                                new getAllWaterPoint().execute(queryPointsNearBy);
+                        }
+                        }
+//                        Log.d("xCameraInsidex", isMarkClick + "");
+//                        if(posLat != null & posLng != null) {
+//                            try {
+//                                Thread.sleep(400);
+//                                String queryPointsNearBy = "http://androidappapi-watermap.rhcloud.com/WaterMap/api/v1/waterPoints/getWaterPointsNearBy?latitude=" + posLat + "&longitude=" + posLng + "&area=1";
+//                                new getAllWaterPoint().execute(queryPointsNearBy);
+//                            } catch (InterruptedException e) {
+//                                e.printStackTrace();
+//                            }
+//                        }
+                    }
+
+
+//                    if(isUp) {
+//                        Log.d("xisMarkClickx", isMarkClick + "");
+//                        if(!isMarkClick) {
+//                            if(posLat != null & posLng != null) {
+//                                try {
+//                                    Thread.sleep(400);
+//                                    String queryPointsNearBy = "http://androidappapi-watermap.rhcloud.com/WaterMap/api/v1/waterPoints/getWaterPointsNearBy?latitude=" + posLat + "&longitude=" + posLng + "&area=1";
+//                                    new getAllWaterPoint().execute(queryPointsNearBy);
+//                                } catch (InterruptedException e) {
+//                                    e.printStackTrace();
+//                                }
+//                            }
+//                        }
+//                    }
+                }
+//                String name = "com.lawrence.lawrencechuang.mydrinkingwatermaptest.MapsActivity";
+//                if(ccl.equals(name)) {
+//
+//                    Log.d("xxHIxx", "tag");
+//                }
+//                ccl.getClass().toString();
+//                new getAllWaterPoint().execute(queryPointsNearBy);
+//                if (ccl.getClass().getName()) {
+//
+//                }
+//                Log.d("=multi=", name);
             }
+
+//            if(posLat != null & posLng != null) {
+//                String queryPointsNearBy = "http://androidappapi-watermap.rhcloud.com/WaterMap/api/v1/waterPoints/getWaterPointsNearBy?latitude=" + posLat + "&longitude=" + posLng + "&area=1";
+//                new getAllWaterPoint().execute(queryPointsNearBy);
+//            }
         }
     }
+
 
 
     @Override
@@ -793,11 +943,8 @@ public class MapsActivity extends AppCompatActivity implements
 
     @Override
     public void onCameraChange(CameraPosition position) {
-        String test = saveLocationOnCamera(position);
-        //Log.d("=testCamera=", test);
-
-        //Log.d("=position=", posLat + "/" + posLng + "/" + posZoom);
-//        Toast.makeText(MapsActivity.this, posLat + "/" + posLng + "/" + posZoom, Toast.LENGTH_SHORT).show();
+        /*將camera移動的座標記錄下來*/
+        saveLocationOnCamera(position);
     }
 
 
@@ -809,7 +956,7 @@ public class MapsActivity extends AppCompatActivity implements
 
         posResult = posLat + "/" + posLng + "/" + posZoom;
 
-        Log.d("=ppp=", posResult);
+//        Log.d("=ppp=", posResult);
 
         return posResult;
     }
@@ -823,6 +970,7 @@ public class MapsActivity extends AppCompatActivity implements
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
+
             progressDialog = new ProgressDialog(MapsActivity.this);
             progressDialog.setTitle("請稍候...");
             progressDialog.setMessage("水點資訊讀取中");
@@ -865,13 +1013,16 @@ public class MapsActivity extends AppCompatActivity implements
         @Override
         protected void onPostExecute(String s) {
 
+            if(myItemClusterManager != null) {
+                myItemClusterManager.clearItems();
+            }
             progressDialog.dismiss();
 
             Log.d("JSON", s);
             try {
                 //解析從api傳回來的json字串
                 JSONArray results = new JSONArray(s);
-//                List<Marker> markers = new ArrayList<Marker>();
+                List<Marker> markers = new ArrayList<Marker>();
                 clusterMarkerItem = new ArrayList<ClusterMarker>();
 
                 for (int i = 0; i < results.length(); i++) {
@@ -879,14 +1030,14 @@ public class MapsActivity extends AppCompatActivity implements
                     JSONObject waterPoint = results.getJSONObject(i);
                     JSONObject location = waterPoint.getJSONObject("location");
 
-                    waterPointsModel.setLongitude(location.getDouble("longitude"));
-                    waterPointsModel.setLatitude(location.getDouble("latitude"));
-                    waterPointsModel.setWaterPointName(waterPoint.getString("waterPointName"));
-                    waterPointsModel.setDescription(waterPoint.getString("description"));
-                    waterPointsModelList.add(waterPointsModel);
+//                    waterPointsModel.setLongitude(location.getDouble("longitude"));
+//                    waterPointsModel.setLatitude(location.getDouble("latitude"));
+//                    waterPointsModel.setWaterPointName(waterPoint.getString("waterPointName"));
+//                    waterPointsModel.setDescription(waterPoint.getString("description"));
+//                    waterPointsModelList.add(waterPointsModel);
 
-                    Double lat = location.getDouble("longitude");
-                    Double lng = location.getDouble("latitude");
+                    Double lng = location.getDouble("longitude");
+                    Double lat = location.getDouble("latitude");
                     String name = waterPoint.getString("waterPointName");
                     String description = waterPoint.getString("description");
                     String time = waterPoint.getString("openingHours");
@@ -901,6 +1052,8 @@ public class MapsActivity extends AppCompatActivity implements
 //                                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.waterdrop))
 //                                    .snippet(description)
 //                    );
+//
+//                    markers.clear();
 //                    markers.add(marker);
 
                     /**
@@ -916,6 +1069,8 @@ public class MapsActivity extends AppCompatActivity implements
                 e.printStackTrace();
             }
 
+//            myItemClusterManager.removeItem();
+
             myItemClusterManager.addItems(clusterMarkerItem);
 
             /*在google map上強制一開始顯示clustering後座標結果*/
@@ -928,22 +1083,24 @@ public class MapsActivity extends AppCompatActivity implements
      *  將使用者最後離開app前的座標寫入sqlite資料庫
      */
     public void insertPosition(String position) {
-        String[] positionResult = position.split("/");
-        Double lat = Double.parseDouble(positionResult[0]);
-        Double lng = Double.parseDouble(positionResult[1]);
-        Double zoom = Double.parseDouble(positionResult[2]);
+        if(position != null && !position.isEmpty()) {
+            String[] positionResult = position.split("/");
+            Double lat = Double.parseDouble(positionResult[0]);
+            Double lng = Double.parseDouble(positionResult[1]);
+            Double zoom = Double.parseDouble(positionResult[2]);
 
-        Log.d("=idLat=", lat + "");
-        Log.d("=idLng=", lng + "");
-        Log.d("=idZoom=", zoom + "");
+            Log.d("=idLat=", lat + "");
+            Log.d("=idLng=", lng + "");
+            Log.d("=idZoom=", zoom + "");
 
-        ContentValues values = new ContentValues();
-        values.put("latitude", lat);
-        values.put("longitude", lng);
-        values.put("zoom", zoom);
-        long id = helper.getWritableDatabase().insert("location_table", null, values);
+            ContentValues values = new ContentValues();
+            values.put("latitude", lat);
+            values.put("longitude", lng);
+            values.put("zoom", zoom);
+            long id = helper.getWritableDatabase().insert("location_table", null, values);
 
-        Log.d("=id=", id + "");
+            Log.d("=id=", id + "");
+        }
     }
 
 
@@ -1040,4 +1197,10 @@ public class MapsActivity extends AppCompatActivity implements
 
         return false;
     }
+
+
+
+
+
+
 }
