@@ -198,23 +198,23 @@ public class AddWaterPointActivity extends AppCompatActivity
 //        Log.d("=*gps*=", coordinate);
 //        Log.d("=*network*=", coordinateNet);
 
-        countDownTimer = new CountDownTimer(120000, 1000) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-//                Log.d("=countdown=", new SimpleDateFormat("s").format(millisUntilFinished));
-
-                if (coordinateNet != null) {
-                    Log.d("=*network*=", coordinateNet);
-                } else if (coordinate != null) {
-                    Log.d("=*gps*=", coordinate);
-                }
-            }
-
-            @Override
-            public void onFinish() {
-
-            }
-        }.start();
+//        countDownTimer = new CountDownTimer(120000, 1000) {
+//            @Override
+//            public void onTick(long millisUntilFinished) {
+////                Log.d("=countdown=", new SimpleDateFormat("s").format(millisUntilFinished));
+//
+//                if (coordinateNet != null) {
+//                    Log.d("=*network*=", coordinateNet);
+//                } else if (coordinate != null) {
+//                    Log.d("=*gps*=", coordinate);
+//                }
+//            }
+//
+//            @Override
+//            public void onFinish() {
+//
+//            }
+//        }.start();
 
 //        Log.d("resBest", bestProvider + "");
     }
@@ -224,8 +224,7 @@ public class AddWaterPointActivity extends AppCompatActivity
     protected void onDestroy() {
         super.onDestroy();
         Log.d("=Act2=", "destory");
-        countDownTimer.cancel();
-
+//        countDownTimer.cancel();
     }
 
 
